@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -9,8 +8,8 @@ export async function POST(
   context: { params: { id: string } }
 ) {
   const formId = context.params.id;
-  const data = await req.formData();
 
+  const data = await req.formData();
   const answers = [];
 
   for (const [fieldLabel, value] of data.entries()) {
@@ -30,7 +29,6 @@ export async function POST(
       },
     });
 
-    // 👇 Must use an ABSOLUTE URL for redirects in API routes!
     return NextResponse.redirect(new URL(`/form/${formId}/thank-you`, req.url));
   } catch (err) {
     console.error(err);

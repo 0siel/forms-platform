@@ -1,5 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+  type RouteHandlerContext,
+} from "next/server";
 import OpenAI from "openai";
 
 const prisma = new PrismaClient();
@@ -10,12 +14,11 @@ const openai = new OpenAI({
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: RouteHandlerContext<{ id: string }> // ✅ explicit correct type
 ) {
   const formId = context.params.id;
   const { question } = await req.json();
 
-  // Fetch responses from the DB
   const responses = await prisma.response.findMany({
     where: { formId },
     include: { answers: true },
@@ -39,18 +42,26 @@ Now answer this question based on the responses (be concise and clear):
 "${question}"
 `;
 
-  const chat = await openai.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: "You are a helpful assistant who analyzes survey responses.",
-      },
-      { role: "user", content: prompt },
-    ],
-    model: "gpt-4o-mini",
-  });
+  try {
+    const chat = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant who analyzes survey responses.",
+        },
+        { role: "user", content: prompt },
+      ],
+      model: "gpt-4o-mini",
+    });
 
-  const reply = chat.choices[0].message.content;
+    const reply = chat.choices[0].message.content;
 
-  return NextResponse.json({ answer: reply });
+    return NextResponse.json({ answer: reply });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    return NextResponse.json(
+      { answer: "AI failed to respond." },
+      { status: 500 }
+    );
+  }
 }
