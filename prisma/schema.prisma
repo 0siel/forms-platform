@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Form {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fields      Field[]
+  responses   Response[]
+  createdAt   DateTime @default(now())
+}
+
+model Field {
+  id       String @id @default(cuid())
+  label    String
+  type     String // e.g., text, multiple-choice
+  form     Form   @relation(fields: [formId], references: [id])
+  formId   String
+  required Boolean
+}
+
+model Response {
+  id        String   @id @default(cuid())
+  form      Form     @relation(fields: [formId], references: [id])
+  formId    String
+  answers   Answer[]
+  createdAt DateTime @default(now())
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  fieldLabel String
+  value      String   // Store as plain text for now; JSON if needed later
+  response   Response @relation(fields: [responseId], references: [id])
+  responseId String
+}
+
