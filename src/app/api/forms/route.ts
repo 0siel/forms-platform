@@ -3,10 +3,20 @@ import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
+type FieldInput = {
+  label: string;
+  type: string;
+  required: boolean;
+};
+
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const { title, description, fields } = body;
+  const { title, description, fields } = body as {
+    title: string;
+    description?: string;
+    fields: FieldInput[];
+  };
 
   try {
     const form = await prisma.form.create({
@@ -14,7 +24,7 @@ export async function POST(req: Request) {
         title,
         description,
         fields: {
-          create: fields.map((field: any) => ({
+          create: fields.map((field: FieldInput) => ({
             label: field.label,
             type: field.type,
             required: field.required,

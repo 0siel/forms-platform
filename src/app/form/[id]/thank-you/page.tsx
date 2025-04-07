@@ -1,7 +1,12 @@
 import Link from "next/link";
 
-export default function ThankYouPage({ params }: { params: { id: string } }) {
-  const formId = params.id;
+export default async function ThankYouPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = await params;
+  const formId = resolvedParams.id;
 
   return (
     <div className="max-w-xl mx-auto p-6 text-center">

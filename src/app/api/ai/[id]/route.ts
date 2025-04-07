@@ -1,9 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import {
-  NextRequest,
-  NextResponse,
-  type RouteHandlerContext,
-} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const prisma = new PrismaClient();
@@ -14,9 +10,10 @@ const openai = new OpenAI({
 
 export async function POST(
   req: NextRequest,
-  context: RouteHandlerContext<{ id: string }> // ✅ explicit correct type
+  context: { params: Promise<{ id: string }> } // Updated type: params is a Promise
 ) {
-  const formId = context.params.id;
+  // Await the params to get the id
+  const { id: formId } = await context.params;
   const { question } = await req.json();
 
   const responses = await prisma.response.findMany({

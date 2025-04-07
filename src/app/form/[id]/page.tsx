@@ -1,27 +1,57 @@
 import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 
+// 1) Force dynamic route handling
+export const dynamicParams = true;
+
 const prisma = new PrismaClient();
 
-export default async function FormPage({ params }: { params: { id: string } }) {
+// 2) Define PageProps with promise-wrapped properties
+export interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+// Extend the field type to include an optional "options" property.
+interface FormField {
+  id: string;
+  formId: string;
+  label: string;
+  type: "text" | "textarea" | "radio" | "rating";
+  required: boolean;
+  options?: string[];
+}
+
+export default async function FormPage({ params }: PageProps) {
+  // Await the promise-wrapped params
+  const resolvedParams = await params;
+
+  // 3) Fetch the form + fields from your DB
   const form = await prisma.form.findUnique({
-    where: { id: params.id },
+    where: { id: resolvedParams.id },
     include: { fields: true },
   });
 
   if (!form) return notFound();
+
+  // Cast fields as FormField[] so that TypeScript recognizes the optional "options"
+  const fields = form.fields as FormField[];
 
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-2">{form.title}</h1>
       <p className="mb-4 text-gray-600">{form.description}</p>
 
+      {/* 
+        4) The POST action points to /form/[id]/submit (dynamic route),
+        passing the form ID in the URL. 
+      */}
       <form
         action={`/form/${form.id}/submit`}
         method="POST"
         className="space-y-4"
       >
-        {form.fields.map((field) => (
+        {fields.map((field) => (
           <div key={field.id}>
             <label className="block font-medium mb-1">{field.label}</label>
 

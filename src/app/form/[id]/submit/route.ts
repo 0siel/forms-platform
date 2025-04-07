@@ -5,9 +5,10 @@ const prisma = new PrismaClient();
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const formId = context.params.id;
+  // Await the promise-wrapped params
+  const { id: formId } = await context.params;
 
   const data = await req.formData();
   const answers = [];
@@ -20,7 +21,7 @@ export async function POST(
   }
 
   try {
-    const response = await prisma.response.create({
+    await prisma.response.create({
       data: {
         formId,
         answers: {

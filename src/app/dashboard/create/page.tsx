@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 
+type Field = {
+  label: string;
+  type: "text" | "textarea" | "radio" | "rating";
+  required: boolean;
+  options: string[];
+};
+
 export default function CreateFormPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [fields, setFields] = useState([
+  const [fields, setFields] = useState<Field[]>([
     { label: "", type: "text", required: false, options: [""] },
   ]);
 
@@ -16,19 +23,27 @@ export default function CreateFormPage() {
     ]);
   };
 
-  const updateField = (index, key, value) => {
+  const updateField = <K extends keyof Field>(
+    index: number,
+    key: K,
+    value: Field[K]
+  ) => {
     const updated = [...fields];
     updated[index][key] = value;
     setFields(updated);
   };
 
-  const updateOption = (fieldIndex, optionIndex, value) => {
+  const updateOption = (
+    fieldIndex: number,
+    optionIndex: number,
+    value: string
+  ) => {
     const updated = [...fields];
     updated[fieldIndex].options[optionIndex] = value;
     setFields(updated);
   };
 
-  const addOption = (fieldIndex) => {
+  const addOption = (fieldIndex: number) => {
     const updated = [...fields];
     updated[fieldIndex].options.push("");
     setFields(updated);
@@ -77,7 +92,9 @@ export default function CreateFormPage() {
           <select
             className="w-full p-2 border rounded"
             value={field.type}
-            onChange={(e) => updateField(index, "type", e.target.value)}
+            onChange={(e) =>
+              updateField(index, "type", e.target.value as Field["type"])
+            }
           >
             <option value="text">Text</option>
             <option value="textarea">Paragraph</option>
